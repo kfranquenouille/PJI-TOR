@@ -1,0 +1,31 @@
+<html>
+<body>
+<script type="text/javascript">
+
+    var publickey;
+
+    function errorLogger(e) {
+        console.log("ERROR :: " + e);
+    }
+
+    function generateRSAKey() {
+        var algo = {
+            // This could be any supported RSA* algorithm.
+            name: "RSASSA-PKCS1-v1_5",
+            // We won't actually use the hash function.
+            hash: {name: "SHA-1"},
+            // Tor hidden services use 1024 bit keys.
+            modulusLength: 1024,
+            // We will use a fixed public exponent for now.
+            publicExponent: new Uint8Array([0x03])
+        };
+
+        return crypto.subtle.generateKey(algo, true, ["encrypt", "decrypt"]);
+    }
+
+    var promise = generateRSAKey().then(function (pair) {
+        publickey = pair.publicKey;});
+    console.log(publickey);
+</script>
+</body>
+</html>
