@@ -4,14 +4,24 @@ Sources : http://blog.engelke.com/2014/06/22/symmetric-cryptography-in-the-brows
           https://github.com/diafygi/webcrypto-examples
 
 */
+function asciiToUint8Array(str)
+{
+    var chars = [];
+    for (var i = 0; i < str.length; ++i)
+        chars.push(str.charCodeAt(i));
+    return new Uint8Array(chars);
+}
+
+var test = crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]);
 
 var keyPromise = window.crypto.subtle.generateKey(
-    {name: "AES-CBC", length: 128}, // Algorithm the key will be used with
+    {name: "aes-cbc", length: 128}, // Algorithm the key will be used with
     true,                           // Can extract key value to binary string
     ["encrypt", "decrypt"]          // Use for these operations
 );
 
-var aesKey;   // Global variable for saving
+
+/*var aesKey;   // Global variable for saving
 keyPromise.then(function(key) {aesKey = key;});
 keyPromise.catch(function(err) {alert("Something went wrong: " + err.message);});
 
@@ -19,18 +29,28 @@ var plainTextString = "toto";
 var plainTextBytes = new Uint8Array(plainTextString.length);
 for (var i=0; i<plainTextString.length; i++) {
     plainTextBytes[i] = plainTextString.charCodeAt(i);
-}
+}*/
 
 var iv = window.crypto.getRandomValues(new Uint8Array(16));
+var algorithm = {name: 'aes-cbc', iv: iv};
 
-var cipherTextBytes;
-var encryptPromise = window.crypto.subtle.encrypt(
+/*var cipherTextBytes;*/
+
+var encryption = crypto.subtle.encrypt(algorithm, keyPromise, asciiToUint8Array(""));
+
+/*var encryptPromise = window.crypto.subtle.encrypt(
     {name: "AES-CBC", iv: iv}, // Random data for security
     aesKey,                    // The key to use 
     plainTextBytes             // Data to encrypt
 );
 encryptPromise.then(function(result) {cipherTextBytes = new Uint8Array(result);});
 encryptPromise.catch(function(err) {alert("Problem encrypting: " + err.message);});
+*/
+console.log("ok");
+console.log(encryption.then(function(res){
+  console.log(res); 
+  return res;
+}));
 
 /* -------------------- AUTRE FACON -------------------------
 
