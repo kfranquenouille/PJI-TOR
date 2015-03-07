@@ -40,7 +40,7 @@ $user_colour = array_rand($colours);
 <script language="javascript" type="text/javascript">  
 $(document).ready(function(){
 	//create a new WebSocket object.
-	var wsUri = "ws://192.168.33.10:9000"; 	
+	var wsUri = "ws://192.168.33.10:9000";
 	websocket = new WebSocket(wsUri); 
 	
 	websocket.onopen = function(ev) { // connection is open 
@@ -65,7 +65,7 @@ $(document).ready(function(){
 			message: mymessage,
 			name: myname,
 			color : '<?php echo $colours[$user_colour]; ?>',
-			nodes : ["192.168.33.10:9000" , "192.168.33.10:9001"] // node path to the client
+			nodes : ["192.168.33.10:9002", "192.168.33.10:9001"] // node path to the client
 		};
 		//convert and send data to server
 		websocket.send(JSON.stringify(msg));

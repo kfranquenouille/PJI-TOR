@@ -1,6 +1,11 @@
 <?php
 $host = '127.0.0.1'; //host
-$port = '9000'; //port
+$port = 9000; //port
+
+if(count($argv) > 1) {
+	$port = $argv[1]; 
+}
+
 $null = NULL; //null var
 
 //Create TCP/IP sream socket
@@ -17,11 +22,14 @@ socket_listen($socket);
 //create & add listning socket to the list
 $clients = array($socket);
 
+$clients_relay = array();
+
 //start endless loop, so that our script doesn't stop
 while (true) {
 	//manage multipal connections
 	$changed = $clients;
-	//returns the socket resources in $changed array
+
+	//suppress the socket resources which are don't ready to read in $changed array
 	socket_select($changed, $null, $null, 0, 10);
 	
 	//check for new socket
@@ -42,23 +50,60 @@ while (true) {
 	}
 	
 	//loop through all connected sockets
-	foreach ($changed as $changed_socket) {	
+	foreach ($changed as $changed_socket) {
 		
 		//check for any incomming data
 		while(socket_recv($changed_socket, $buf, 1024, 0) >= 1)
 		{
-			$received_text = unmask($buf); //unmask data
-			$tst_msg = json_decode($received_text); //json decode 
+			$received_text = $buf;
 
-			print_r($tst_msg);
+			if(!in_array($changed_socket, $clients_relay)) {
+				$received_text = unmask($buf); //unmask data	
+			}
+
+			$tst_msg = json_decode($received_text); //json decode 
 
 			$user_name = $tst_msg->name; //sender name
 			$user_message = $tst_msg->message; //message text
 			$user_color = $tst_msg->color; //color
-			
-			//prepare data to be sent to client
-			$response_text = mask(json_encode(array('type'=>'usermsg', 'name'=>$user_name, 'message'=>$user_message, 'color'=>$user_color)));
-			send_message($response_text); //send data
+
+			if(is_array($tst_msg->nodes)) {
+				$nodes = $tst_msg->nodes; //nodes list (can be empty)
+			} else {
+				$nodes = array();
+				foreach ($tst_msg->nodes as $v) {
+					$nodes[] = $v;
+				}
+			}
+
+			if(empty($nodes)) {
+				//prepare data to be sent to client
+				$response_text = mask(json_encode(array('type'=>'usermsg', 'name'=>$user_name, 'message'=>$user_message, 'color'=>$user_color)));
+				send_message($response_text); //send data
+			} else {
+				$addr = explode(':', $nodes[0]);
+				$socket_node = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+				socket_connect($socket_node, $addr[0], $addr[1]);
+
+				$handshake_msg  = "GET / HTTP/1.1\r\n" .
+				"Upgrade: websocket\r\n" .
+				"Connection: Upgrade\r\n" .
+				"Host: $host:$port\r\n" .
+				"WebSocket-Origin: $host\r\n" .
+				"Sec-WebSocket-Key: k2towQT28s50DtKptTjZbg==\r\n" .
+				"Sec-WebSocket-Version: 13\r\n" .
+				"Type-node: relay\r\n\r\n";
+				@socket_write($socket_node,$handshake_msg,strlen($handshake_msg));
+
+				unset($nodes[0]);
+
+				$msg_to_client = json_encode(array('nodes'=>$nodes, 'name'=>$user_name, 'message'=>$user_message, 'color'=>$user_color));
+
+				sleep(1);
+
+				@socket_write($socket_node,$msg_to_client,strlen($msg_to_client));
+				socket_close($socket_node);
+			}
 			break 2; //exist this loop
 		}
 		
@@ -68,6 +113,10 @@ while (true) {
 			$found_socket = array_search($changed_socket, $clients);
 			socket_getpeername($changed_socket, $ip);
 			unset($clients[$found_socket]);
+
+			// remove socket for $clients_relay array
+			$found_socket = array_search($changed_socket, $clients_relay);
+			unset($clients_relay[$found_socket]);
 			
 			//notify all users about disconnected connection
 			$response = mask(json_encode(array('type'=>'system', 'message'=>$ip.' disconnected')));
@@ -129,6 +178,7 @@ function mask($text)
 //handshake new client.
 function perform_handshaking($receved_header,$client_conn, $host, $port)
 {
+	global $clients_relay;
 	$headers = array();
 	$lines = preg_split("/\r\n/", $receved_header);
 	foreach($lines as $line)
@@ -138,6 +188,11 @@ function perform_handshaking($receved_header,$client_conn, $host, $port)
 		{
 			$headers[$matches[1]] = $matches[2];
 		}
+	}
+
+	// Checking relay
+	if(isset($headers['Type-node']) && $headers['Type-node'] = 'relay') {
+		$clients_relay[] = $client_conn; //add socket to client relay array
 	}
 
 	$secKey = $headers['Sec-WebSocket-Key'];
