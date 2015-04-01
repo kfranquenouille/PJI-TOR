@@ -12,12 +12,49 @@ function asciiToUint8Array(str)
     return new Uint8Array(chars);
 }
 
-var test = crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]);
+function asciiToUint16Array(str)
+{
+    var chars = [];
+    for (var i = 0; i < str.length; ++i)
+        chars.push(str.charCodeAt(i));
+    return new Uint16Array(chars);
+}
+
+
+
+var aesKey;
+var encryptedData;
+var data = asciiToUint8Array("ceci est un test");
+var iv = window.crypto.getRandomValues(new Uint8Array(16))
+var algorithm = {name: 'aes-cbc', iv: iv};
+console.log(data);
+console.log(iv);
 
 var keyPromise = window.crypto.subtle.generateKey(
     {name: "aes-cbc", length: 128}, // Algorithm the key will be used with
     true,                           // Can extract key value to binary string
     ["encrypt", "decrypt"]          // Use for these operations
+).then(
+  function(key) {
+    aesKey = key;
+    window.crypto.subtle.encrypt(algorithm, key, data).then(function(encrypted){
+      //returns an ArrayBuffer containing the encrypted data
+      encryptedData = new Uint8Array(encrypted);
+      console.log("encrypted data :")
+      console.log(encryptedData);
+    });
+/*    window.crypto.subtle.decrypt(algorithm, key, encryptedData).then(function(decrypted){
+      //returns an ArrayBuffer containing the encrypted data
+      console.log("decrypted data :")
+      console.log(new Uint8Array(decrypted));
+    });*/
+    console.log("Key :");
+    console.log(key);
+  }
+).catch(
+  function(err) {
+    alert("Something went wrong: " + err.message);
+  }
 );
 
 
@@ -31,12 +68,12 @@ for (var i=0; i<plainTextString.length; i++) {
     plainTextBytes[i] = plainTextString.charCodeAt(i);
 }*/
 
-var iv = window.crypto.getRandomValues(new Uint8Array(16));
+
 var algorithm = {name: 'aes-cbc', iv: iv};
 
 /*var cipherTextBytes;*/
 
-var encryption = crypto.subtle.encrypt(algorithm, keyPromise, asciiToUint8Array(""));
+/*var encryption = crypto.subtle.encrypt(algorithm, keyPromise, asciiToUint8Array(""));*/
 
 /*var encryptPromise = window.crypto.subtle.encrypt(
     {name: "AES-CBC", iv: iv}, // Random data for security
@@ -46,11 +83,7 @@ var encryption = crypto.subtle.encrypt(algorithm, keyPromise, asciiToUint8Array(
 encryptPromise.then(function(result) {cipherTextBytes = new Uint8Array(result);});
 encryptPromise.catch(function(err) {alert("Problem encrypting: " + err.message);});
 */
-console.log("ok");
-console.log(encryption.then(function(res){
-  console.log(res); 
-  return res;
-}));
+console.log("fin du fichier");
 
 /* -------------------- AUTRE FACON -------------------------
 
