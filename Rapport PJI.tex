@@ -99,8 +99,32 @@ Le but de ce projet est d'étudier la faisabilité de l'approche à l'aide de te
 \newpage
 \section{Description générale du projet}
 	\subsection{Problématique}
+	\paragraph*{}
+	Le but de ce projet était de mettre en place une "simulation" du réseau TOR via un navigateur web. Pour cela, nous avons pu voir avec Julien Iguchi-Cartigni les technologies que l'on pouvait utiliser. De ce fait, on a pu découpé le projet en 2 parties : 
+	\begin{itemize}
+		\item[•] Web Cryptography API
+		\item[•] WebSocket API
+	\end{itemize}
+	\paragraph*{}
+	Pour réaliser cela, nous devions réaliser cela avec un seul relais client pour debuter puis ensuite le faire avec 3 afin de bien vérifier l'encryption des messages et que les messages sont bien redirigés vers le prochain relais.
+	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
+		\includegraphics[scale=0.8]{project.jpg}
+		\caption{Transfert d'un message de A vers B en passant par 3 relais}
+		\label{project}
+	\end{figure}
 	
 	\subsection{Web Cryptography API}
+	\paragraph*{}
+	Afin de bien crypter les messages envoyés et d'utiliser une technologies assez fiable et récente, nous avons privilégié cette API. En effet, elle est compatible sur presque tous les navigateurs (inclus de base). En revanche, il nous a fallu trouver un bon algorithme de chiffrement.\\
+	Dans un premier temps, nous avons utilisé le chiffrement AES-CBC afin de tester et découvrir Webcrypto API et réaliser un premier jet de ce que nous voulions faire. Une fois le messages encrypté 4 fois. Voici un exemple du cryptage :
+	\newpage	
+	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
+		\includegraphics[scale=0.70]{AES.jpg}
+		\caption{Cryptage d'un message 4 fois de suite en AES-CBC}
+		\label{AES}
+	\end{figure}
+	\paragraph*{}
+	Pour la solution optimale, il est plus préférable d'utiliser un système de clés publiques et de clés privées. Avec l'algorithme RSA-OAEP, celà est possible. Chaque clé générée (l'objet KeyPromise) contient une clé publique et une clé privée. De ce fait, cette solution est plus attendu car elle ressemble très fortement à l'architecture du réseau TOR. Bien entendu, le client doit connaître le chemin afin qu'il puisse créer son message crypté avec les clés publiques des relais correspondants.
 	
 	\subsection{WebSocket API}
 
