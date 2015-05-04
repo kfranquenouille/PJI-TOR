@@ -1,5 +1,4 @@
 # TOR architecture on web browser
---------
 ## Presentation (in french)
 	Tor est un projet pour le support de l'anonymat en dissimulant les communications entre un client web et un serveur. Le mécanisme s'appuie sur un ensemble de relais de confiance disposés sur des serveurs. 
 	
@@ -13,7 +12,17 @@
 *coming soon*
 
 ## Test project
-### Websocket part
+### Websocket NodeJS part
+1. Download and install nodejs 
+
+2. Go to the Websocket NodeJS part folder
+
+3. Type : npm install (to install dependencies)
+
+4. Type : node server.js (to launch server)
+
+5. open index.html in your favourite browser and enjoy !
+### Websocket PHP part
 Running Server :
 
 1. Change host address in index.html and server.php
