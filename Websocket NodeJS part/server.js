@@ -45,7 +45,7 @@ io.sockets.on('connection', function(socket) {
 });
 
 // Crypto
-var crypto = require('./lib/webcrypto/subtlecrypto');
+var crypto = require('./lib/webcrypt/subtlecrypto');
 var keyGenerate1;
 var encryptedMsg;
 var compteur = 0;
