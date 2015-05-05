@@ -19,9 +19,10 @@
 
 3. Type : npm install (to install dependencies)
 
-4. Type : node server.js (to launch server)
+4. Type : node server.js [<port_number>] (to launch server)
 
 5. open index.html in your favourite browser and enjoy !
+
 ### Websocket PHP part
 Running Server :
 
