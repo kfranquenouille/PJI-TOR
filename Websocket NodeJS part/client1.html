@@ -19,6 +19,72 @@
 	<script>
 $(document).ready(function(){
 
+	var handle_error = function (error) {
+	  console.log("Error:");
+	  console.log(error);  
+	};
+
+	var keyGenerate1;
+	var keyGenerate2;
+	var keyGenerate3;
+	var keyGenerate4;
+
+	var encryptedMsg;
+	var compteur = 0;
+
+	function asciiToUint8Array(str)
+	{
+	  var chars = [];
+	  for (var i = 0; i < str.length; ++i)
+	    chars.push(str.charCodeAt(i));
+	  return new Uint8Array(chars);
+	}
+
+	function uint8ArrayToAscii(tab)
+	{
+	  var string = "";
+	  for (var i = 0; i < tab.length; i++){
+	    string += String.fromCharCode(tab[i]);
+	  }
+	  return string;
+	    
+	}
+
+	/** Generation de clés **/
+	function generateKeys(){
+	  window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 512, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key) {
+	    keyGenerate1 = key;
+	    console.log(keyGenerate1);
+	    window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 1024, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key2) {
+	      keyGenerate2 = key2;
+	      console.log(key2);
+	      window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key3) {
+	        keyGenerate3 = key3;
+	        console.log(key3);
+	        window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 4096, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key4) {
+	          keyGenerate4 = key4;
+	          console.log(key4);
+	          alert("Cles generees");
+	        }, handle_error);
+	      }, handle_error);
+	    }, handle_error);
+	  }, handle_error);	  
+	}
+
+	function encryptData(key, data){
+	  var temp;
+	  compteur += 1;
+	  window.crypto.subtle.encrypt({name: "RSA-OAEP"}, key.publicKey, data).then(function (ct1) {
+	    console.log("RSA-OAEP encrypt "+compteur+" :");
+	    temp = new Uint8Array(ct1);
+	    encryptedMsg = new Uint8Array(ct1);
+	    console.log(uint8ArrayToAscii(temp));
+	  }, handle_error);
+	  return temp;
+	}
+
+
+
 	// Params 
 	var node_addr = 'http://127.0.0.1:9000';
 	var nodes_list = ["127.0.0.1:9001", "127.0.0.1:9002"];
@@ -31,6 +97,7 @@ $(document).ready(function(){
 	socket.on('connect', function() {
 		$('#message_box').append("<div class=\"system_msg\">Connected!</div>"); //notify user
 		$("#message_box").scrollTop($("#message_box")[0].scrollHeight);
+		generateKeys();
 	});
 
 	socket.on('disconnect', function() {
@@ -68,6 +135,8 @@ $(document).ready(function(){
 		var mymessage = $('#message').val(); //get message text
 		var myname = $('#name').val(); //get user name
 		
+		
+
 		if(myname == ""){ //empty name?
 			alert("Enter your Name please!");
 			return;
@@ -77,15 +146,19 @@ $(document).ready(function(){
 			return;
 		}
 		
-		//prepare json data
-		var msg = {
-			message: mymessage,
-			name: myname,
-			color : user_colour,
-			nodes : nodes_list // node path to the client
-		};
-		//send data to server
-		socket.emit('msg', msg);
+		encryptData(keyGenerate1, asciiToUint8Array(mymessage));
+		setTimeout(function () {
+	    	//prepare json data
+			var msg = {
+				message: encryptedMsg,
+				name: myname,
+				color : user_colour,
+				nodes : nodes_list // node path to the client
+			};
+			console.log("encryptedMsg : "+ uint8ArrayToAscii(encryptedMsg));
+			//send data to server
+			socket.emit('msg', msg);
+		}, 1000);
 	});
 });
 	</script>

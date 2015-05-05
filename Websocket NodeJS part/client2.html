@@ -28,9 +28,47 @@ $(document).ready(function(){
 	// Connect to the first node
 	var socket = io.connect(node_addr);
 
+	var keyGenerate1;
+
+	function uint8ArrayToAscii(tab)
+	{
+	  var string = "";
+	  for (var i = 0; i < tab.length; i++){
+	    string += String.fromCharCode(tab[i]);
+	  }
+	  return string;
+	    
+	}
+
+	var handle_error = function (error) {
+	  console.log("Error:");
+	  console.log(error);  
+	};
+
+	/** Generation de clés **/
+	function generateKey(){
+	  window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 512, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key) {
+	    keyGenerate1 = key;
+	    console.log(keyGenerate1);
+	  }, handle_error);	  
+	}
+
+	function exportKey(){
+		window.crypto.subtle.exportKey(
+		    "spki",
+		    keyGenerate1.publicKey
+		).then(function(keydata){
+	    	console.log(uint8ArrayToAscii(new Uint8Array(keydata)));
+		}, handle_error);
+	}
+
 	socket.on('connect', function() {
 		$('#message_box').append("<div class=\"system_msg\">Connected!</div>"); //notify user
 		$("#message_box").scrollTop($("#message_box")[0].scrollHeight);
+		generateKey();
+		setTimeout(function () {
+	        exportKey();
+	    }, 500);
 	});
 
 	socket.on('disconnect', function() {
@@ -49,6 +87,11 @@ $(document).ready(function(){
 		var umsg = msg.message; //message text
 		var uname = msg.name; //user name
 		var ucolor = msg.color; //color
+
+		var temp = $.map(umsg, function(value, index) {
+		    return [value];
+		});
+		umsg = uint8ArrayToAscii(temp);
 
 		if(type == 'usermsg') 
 		{

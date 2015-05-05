@@ -79,9 +79,6 @@ function generateKeys(){
       }, handle_error);
     }, handle_error);
   }, handle_error);
-  
-  
-  
 }
 
 function encryptData(key, data, jquerySelector){
