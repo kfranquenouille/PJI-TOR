@@ -43,3 +43,48 @@ io.sockets.on('connection', function(socket) {
 		}
 	});
 });
+
+// Crypto
+var crypto = require('./lib/webcrypto/subtlecrypto');
+var keyGenerate1;
+var encryptedMsg;
+var compteur = 0;
+
+var handle_error = function (error) {
+ 	console.log("Error:");
+ 	console.log(error);  
+};
+
+function asciiToUint8Array(str) {
+	var chars = [];
+	for (var i = 0; i < str.length; ++i)
+		chars.push(str.charCodeAt(i));
+	return new Uint8Array(chars);
+}
+
+function uint8ArrayToAscii(tab) {
+	var string = "";
+	for (var i = 0; i < tab.length; i++) {
+		string += String.fromCharCode(tab[i]);
+	}
+	return string;
+}
+
+function encryptData(key, data) {
+	var temp;
+	compteur += 1;
+	crypto.crypto.subtle.encrypt({name: "RSA-OAEP"}, key.publicKey, data).then(function (ct1) {
+		/*console.log("RSA-OAEP encrypt "+compteur+" :");
+		temp = new Uint8Array(ct1);
+		encryptedMsg = new Uint8Array(ct1);
+		console.log(uint8ArrayToAscii(temp));*/
+	}, handle_error);
+	return temp;
+}
+
+crypto.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 512, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key) {
+	keyGenerate1 = key;
+	console.log(keyGenerate1);
+
+	encryptData(keyGenerate1, asciiToUint8Array('Salut'));
+}, handle_error);
