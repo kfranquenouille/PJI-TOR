@@ -52,11 +52,49 @@
 %%% Forcer les images à rester dans leur section
 \usepackage[section]{placeins}
 
+%%% Utiliser un formatage pour le code 
+\usepackage{listings}
+\usepackage{color}
+\definecolor{lightgray}{rgb}{.9,.9,.9}
+\definecolor{darkgray}{rgb}{.4,.4,.4}
+\definecolor{purple}{rgb}{0.65, 0.12, 0.82}
+
+\lstdefinelanguage{JavaScript}{
+  keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+  keywordstyle=\color{blue}\bfseries,
+  ndkeywords={class, export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{darkgray}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
+
+\lstset{
+   language=JavaScript,
+   backgroundcolor=\color{lightgray},
+   extendedchars=true,
+   basicstyle=\footnotesize\ttfamily,
+   showstringspaces=false,
+   showspaces=false,
+   numbers=left,
+   numberstyle=\footnotesize,
+   numbersep=9pt,
+   tabsize=2,
+   breaklines=true,
+   showtabs=false,
+   captionpos=b
+}
+
 
 %%%%%%%%%%%%%%%%%%%  PAGE DE GARDE %%%%%%%%%%%%%%%%%%%%%%
 \title{	
 		\horrule{0.5pt} \\[0.5cm]
-		\huge PJI Architecture TOR sur\\ navigateur web \\
+		\huge(73) PJI Architecture TOR sur\\ navigateur web \\
 		\horrule{0.5pt} \\[0.5cm]
 }
 \author{
@@ -64,6 +102,9 @@
         Franquenouille Kevin\\[-3pt]		\normalsize
        	Cornette Damien\\[-3pt]		\normalsize
        	Git Repository : \url{https://github.com/kfranquenouille/PJI-TOR.git} \\[-3pt]		\normalsize
+       	\\
+       	\normalfont
+       	Suivi par : Julien Iguchi-Cartigny\\[-3pt]		\normalsize
 }
 \date{
 		\normalfont 								\normalsize
@@ -125,6 +166,101 @@ Le but de ce projet est d'étudier la faisabilité de l'approche à l'aide de te
 	\end{figure}
 	\paragraph*{}
 	Pour la solution optimale, il est plus préférable d'utiliser un système de clés publiques et de clés privées. Avec l'algorithme RSA-OAEP, celà est possible. Chaque clé générée (l'objet KeyPromise) contient une clé publique et une clé privée. De ce fait, cette solution est plus attendu car elle ressemble très fortement à l'architecture du réseau TOR. Bien entendu, le client doit connaître le chemin afin qu'il puisse créer son message crypté avec les clés publiques des relais correspondants.
+	\paragraph*{}
+	Ce qu'il faut comprendre en utilisant WebCrypto API, c'est le fait que pour générer une clé, encrypter ou décrypter, nous jouons avec des \textit{Promises}. En Javascript, des \textit{Promises} ou "promesses" en français, sont utilisées pour réaliser des actions asynchrones. En effet, elles représentent des intermédiaires vers des valeurs qui ne sont nécessairement connues lors de leurs créations. Cela permet de gérer des actions asynchrones et de leur associer des gestionnaires d'erreurs. 
+	\paragraph*{}
+	La principale difficulté qui réside dans le fait d'utiliser des \textit{Promises} est de bien gérer les erreurs mais savoir exactement où le code à échouer. Le fait d'encrypter un message avec une clé publique puis d'encrypter le résultat avec une autre clé publique nécessite obligatoirement une imbrication du code.
+	Voici un exemple :
+	\begin{lstlisting}
+window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]).then(function (key) {
+  var data = asciiToUint8Array("ceci est un test");
+  console.log("Data:");
+  console.log("value: ceci est un test")
+  console.log(data);
+  var algorithm = key.algorithm;
+  algorithm.iv = window.crypto.getRandomValues(new Uint8Array(16));
+
+  window.crypto.subtle.encrypt(algorithm, key, data).then(function (ct) {
+    console.log("AES-CBC encrypt 1:");
+    console.log(new Uint8Array(ct));
+
+    window.crypto.subtle.decrypt(algorithm, key, ct).then(function (pt) {
+      console.log("AES-CBC decrypt 1:");
+      console.log(new Uint8Array(pt));
+      console.log(uint8ArrayToAscii(new Uint8Array(pt)));
+    }, handle_error);
+  }, handle_error);
+}, handle_error);
+	\end{lstlisting}
+	\paragraph*{}
+	Une autre difficulté réside dans le fait de trouver un bon algorithme qui respecte ce que l'on souhaite faire. Par exemple, pour découvrir WebCrypto API, nous avions testé avec la cryptographie AES-CBC comme dans l'exemple précédent.
+	Dans ce cas, on constate que l'on a bien une clé qui est générée. En revanche, elle ne respecte par ce que l'architecture TOR exige. La clé n'est pas publique ni privée mais permet juste d'encrypter un message et de le décrypter. Nous avons regardé les différents cryptages disponibles et compatibles et nous avons trouvé RSA-OAEP. Ce dernier gère les clés publiques et privées et permet d'encrypter et de décrypter. D'autres cryptographies RSA possèdent juste les fonctions de signature et de vérification de la signature. Egalement, la cryptographie RSAES-PKCS1-v1\_5	 aurait pu être exploitée mais cette dernière n'est plus disponible dans les navigateurs. C'est donc pour cela que nous avons choisi RSA-OAEP.\\
+	Voici un exemple basique avec RSA-OAEP :
+	\begin{lstlisting}
+window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-256"}}, true, ["encrypt", "decrypt"]).then(function (key) {
+  var data = asciiToUint8Array("ceci est un test");
+  console.log("Data:");
+  console.log(uint8ArrayToAscii(data));
+  console.log("Public Key");
+  console.log(key.publicKey);
+  console.log("Private Key");
+  console.log(key.privateKey);
+
+  window.crypto.subtle.encrypt({name: "RSA-OAEP"}, key.publicKey, data).then(function (encrypted) {
+    console.log(uint8ArrayToAscii(new Uint8Array(encrypted)));
+
+    window.crypto.subtle.decrypt({name: "RSA-OAEP"}, key.privateKey, encrypted).then(function (decrypted) {
+      console.log(uint8ArrayToAscii(new Uint8Array(decrypted)));
+    }, handle_error);
+  }, handle_error);
+}, handle_error);
+	\end{lstlisting}
+	\paragraph*{}
+	Egalement, nous avons pu regarder quels sont les algorithmes supportés par la plupart des navigateurs. Nous en avons donc dressé le tableau suivant : 
+	\begin{center}
+	\begin{tabular}[h]{|*{2}{c|}}
+  		\hline
+  		Algorithme & Supporté\\
+  		\hline
+  		RSASSA-PKCS1-v1\_5 & Oui\\
+  		\hline
+  		RSAES-PKCS1-v1\_5 & Non\\
+  		\hline
+  		RSA-PSS & Oui\\
+  		\hline
+  		RSA-OAEP & Oui\\
+  		\hline
+  		AES-CTR & Oui\\
+  		\hline
+  		AES-CBC & Oui\\
+  		\hline
+  		AES-CMAC & Non\\
+  		\hline
+  		AES-GCM & Oui\\
+  		\hline
+  		AES-CFB & Oui\\
+  		\hline
+  		AES-KW & Oui\\
+  		\hline
+  		SHA-1 & Oui\\
+  		\hline
+  		SHA-256 & Oui\\
+  		\hline
+  		SHA-384 & Oui\\
+  		\hline
+  		SHA-512 & Oui\\
+  		\hline
+	\end{tabular}
+	\end{center}
+	Les algorithmes SHA sont des \textit{digest}. Cela sert principalement à créer des table de hachage crypter un message ou une clé par exemple. Dans le code précédent, on peut remarquer que la fonction de hachage mise en place est bien le SHA-256.
+	\paragraph*{}
+	Une fois que nous avions trouvé l'algorithme et trouver son fonctionnement, nous avons du mettre en place une maquette. Voici donc une image représentative de ce que l'on a testé :
+	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
+		\includegraphics[scale=0.70]{RSA.jpg}
+		\caption{Cryptage d'un message 4 fois de suite en RSA-OAEP}
+		\label{RSA}
+	\end{figure}
+
 	
 	\subsection{WebSocket API}
 
