@@ -147,7 +147,7 @@ Le but de ce projet est d'étudier la faisabilité de l'approche à l'aide de te
 		\item[•] WebSocket API
 	\end{itemize}
 	\paragraph*{}
-	Pour réaliser cela, nous devions réaliser cela avec un seul relais client pour debuter puis ensuite le faire avec 3 afin de bien vérifier l'encryption des messages et que les messages sont bien redirigés vers le prochain relais.
+	Pour réaliser cela, nous devions réaliser cela avec un seul relais client pour débuter puis ensuite le faire avec 3 afin de bien vérifier l'encryptage des messages et que les messages sont bien redirigés vers le prochain relais. De plus, il fallait gérer le système de clés publiques et privées afin que le message ne puisse pas être décodé par n'importe quel utilisateur lambda.
 	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
 		\includegraphics[scale=0.8]{project.jpg}
 		\caption{Transfert d'un message de A vers B en passant par 3 relais}
@@ -260,6 +260,8 @@ window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicE
 		\caption{Cryptage d'un message 4 fois de suite en RSA-OAEP}
 		\label{RSA}
 	\end{figure}
+	\\
+	Dans cet exemple, il faut crypter obligatoirement avec la clé publique et décrypter avec la clé privée correspondante. En effet, les clés publiques sont accessibles à tout le monde alors que les clés privées sont uniquement restreintes au point relais correspondant.
 
 	
 	\subsection{WebSocket API}
