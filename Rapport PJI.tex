@@ -283,7 +283,146 @@ window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicE
 	\subsection{Docker}
 	
 	\subsection{Cryptographie}
-	
+	\paragraph*{}
+	Pour la cryptographie avec WebCrypto API, il fallait tester des cas de base. Tout d'abord pour découvrir le fonctionnement, nous avons pris l'algorithme AES-CBC. Puis nous avons généré une clé et encrypté un message de test. Une fois ce message encrypté, nous avons affiché le résultat sous la forme d'une cha\^ine de caractères. Ensuite, pour vérifier que l'on puisse bien décrypter cela, nous l'avons décrypter avec la clé et vérifié que le message décrypté correspondait bien à celui de départ.\\
+	Voici le code qui a permis de réaliser cela :
+	\begin{lstlisting}
+window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]).then(function (key) {
+  var data = asciiToUint8Array("ceci est un test");
+  console.log("Data:");
+  console.log("value: ceci est un test")
+  console.log(data);
+  var algorithm = key.algorithm;
+  algorithm.iv = window.crypto.getRandomValues(new Uint8Array(16));
+
+  window.crypto.subtle.encrypt(algorithm, key, data).then(function (ct) {
+    console.log("AES-CBC encrypt 1:");
+    console.log(new Uint8Array(ct));
+
+    window.crypto.subtle.decrypt(algorithm, key, ct).then(function (pt) {
+      console.log("AES-CBC decrypt 1:");
+      console.log(new Uint8Array(pt));
+      console.log(uint8ArrayToAscii(new Uint8Array(pt)));
+    }, handle_error);
+  }, handle_error);
+}, handle_error);
+	\end{lstlisting}
+	Une fois ceci réalisé, nous nous sommes posés la question de ce qu'il en est si nous cryptons 4 fois de suite un message. Pour cela, il nous a fallu adapter notre code de manière basique et de tester ce que cela donnait.\\
+	Voici l'encha\^inement du code : 
+	\begin{lstlisting}
+function startCrypto(input_content){
+  window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]).then(function (key1) {
+    var data = asciiToUint8Array(input_content);
+    var algorithm = key1.algorithm;
+    algorithm.iv = window.crypto.getRandomValues(new Uint8Array(16));
+
+    window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]).then(function (key2) {
+      var algorithm = key2.algorithm;
+      algorithm.iv = window.crypto.getRandomValues(new Uint8Array(16));
+
+      window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]).then(function (key3) {
+        var algorithm = key3.algorithm;
+        algorithm.iv = window.crypto.getRandomValues(new Uint8Array(16));
+
+        window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]).then(function (key4) {
+          var algorithm = key4.algorithm;
+          algorithm.iv = window.crypto.getRandomValues(new Uint8Array(16));
+
+          window.crypto.subtle.encrypt(algorithm, key1, data).then(function (ct1) {
+            console.log("AES-CBC encrypt 1:");
+            console.log(uint8ArrayToAscii(new Uint8Array(ct1)));
+
+            window.crypto.subtle.encrypt(algorithm, key2, new Uint8Array(ct1)).then(function (ct2) {
+              console.log("AES-CBC encrypt 2:");
+              console.log(uint8ArrayToAscii(new Uint8Array(ct2)));
+
+              window.crypto.subtle.encrypt(algorithm, key3, new Uint8Array(ct2)).then(function (ct3) {
+                console.log("AES-CBC encrypt 3:");
+                console.log(uint8ArrayToAscii(new Uint8Array(ct3)));
+
+                window.crypto.subtle.encrypt(algorithm, key4, new Uint8Array(ct3)).then(function (ct4) {
+                  console.log("AES-CBC encrypt 4:");
+                  console.log(uint8ArrayToAscii(new Uint8Array(ct4)));
+
+                  window.crypto.subtle.decrypt(algorithm, key4, ct4).then(function (pt4) {
+                    console.log("AES-CBC decrypt 4:");
+                    console.log(uint8ArrayToAscii(new Uint8Array(pt4)));
+
+                    window.crypto.subtle.decrypt(algorithm, key3, pt4).then(function (pt3) {
+                      console.log("AES-CBC decrypt 3:");
+                      console.log(uint8ArrayToAscii(new Uint8Array(pt3)));
+
+                      window.crypto.subtle.decrypt(algorithm, key2, pt3).then(function (pt2) {
+                        console.log("AES-CBC decrypt 2:");
+                        console.log(uint8ArrayToAscii(new Uint8Array(pt2)));
+
+                        window.crypto.subtle.decrypt(algorithm, key1, pt2).then(function (pt) {
+                          console.log("AES-CBC decrypt 1:");
+                          console.log(uint8ArrayToAscii(new Uint8Array(pt)));
+                        }, handle_error);
+                      }, handle_error);
+                    }, handle_error);
+                  }, handle_error);
+                }, handle_error);
+              }, handle_error);
+            }, handle_error);
+          }, handle_error);
+        }, handle_error);
+      }, handle_error);
+    }, handle_error);
+  }, handle_error);
+}
+	\end{lstlisting} 
+	Comme on peut le constater le code devient de plus en plus en illisible si on l'imbrique. Cependant, étant juste le test de découverte, cela avait peut d'importance mais il s'agissait juste de la manière de procéder qui nous intéressait. De ce fait, nous avons appliqué ceci avec la bon cryptage qui est RSA-OAEP. pour le cas d'un seul encryptage, il s'agit a peu de chose près le même cas que AES-CBC. En revanche, pour un encryptage multiple, cela dépend de la taille des données. En effet, nous avons voulu faire varier le \textit{modulusLength}. Cela nous a permis d'avoir un message crypté plus ou moins grand.\\ L'exemple suivant nous a permis de réaliser cela : 
+	\begin{lstlisting}
+function generateKeys(){
+  window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 512, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key) {
+    keyGenerate1 = key;
+    console.log(keyGenerate1);
+    window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 1024, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key2) {
+      keyGenerate2 = key2;
+      console.log(key2);
+      window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key3) {
+        keyGenerate3 = key3;
+        console.log(key3);
+        window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 4096, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-1"}}, true, ["encrypt", "decrypt"]).then(function (key4) {
+          keyGenerate4 = key4;
+          console.log(key4);
+          alert("Cles generees");
+        }, handle_error);
+      }, handle_error);
+    }, handle_error);
+  }, handle_error);
+}	
+	\end{lstlisting}
+	Une fois les clés générées, il ne nous restait plus qu'à les stocker afin de pouvoir les réutiliser par la suite. De plus, nous avons factoriser le code de l'encryptage et du décryptage afin d'éviter l'imbrication vu comme précédemment. 
+		\begin{lstlisting}
+function encryptData(key, data, jquerySelector){
+  var temp;
+  compteur += 1;
+  window.crypto.subtle.encrypt({name: "RSA-OAEP"}, key.publicKey, data).then(function (ct1) {
+    console.log("RSA-OAEP encrypt "+compteur+" :");
+    temp = new Uint8Array(ct1);
+    encryptedMsg = new Uint8Array(ct1);
+    $( jquerySelector ).text($( jquerySelector ).text()+uint8ArrayToAscii(temp));
+    console.log(uint8ArrayToAscii(temp));
+  }, handle_error);
+  return temp;
+}
+
+function decryptData(key, data, jquerySelector){
+  window.crypto.subtle.decrypt({name: "RSA-OAEP"}, key.privateKey, data).then(function (pt) {
+    console.log("RSA-OAEP decrypt "+compteur+" :");
+    encryptedMsg = new Uint8Array(pt);
+    $( jquerySelector ).text($( jquerySelector ).text()+uint8ArrayToAscii(encryptedMsg));
+    console.log(uint8ArrayToAscii(encryptedMsg));
+    compteur -= 1;
+    return pt;
+  }, handle_error);
+}	
+	\end{lstlisting}
+	L'utilisation de \textit{console.log()} nous a été très utile afin de debugger notre code mais aussi servir de trace pour voir l'utilisation de ce dernier. Une fois ceci fait, l'enchaînement des cryptages et décryptages se fait séquentiellement.\\
+	Un exemple est disponible dans la partie ./Webcrypto part/ en affichant la page index.html.
 	\subsection{WebSocket}
 
 \newpage	
