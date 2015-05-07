@@ -47,7 +47,7 @@
 %%% Maketitle metadata
 \newcommand{\horrule}[1]{\rule{\linewidth}{#1}} 	%ligne horizontale
 
-\parindent=1cm
+\parindent=2cm
 
 %%% Forcer les images à rester dans leur section
 \usepackage[section]{placeins}
@@ -142,21 +142,259 @@ Le but de ce projet est d'étudier la faisabilité de l'approche à l'aide de te
 	\subsection{Problématique}
 	\paragraph*{}
 	Le but de ce projet était de mettre en place une "simulation" du réseau TOR via un navigateur web. Pour cela, nous avons pu voir avec Julien Iguchi-Cartigni les technologies que l'on pouvait utiliser. De ce fait, on a pu découpé le projet en 2 parties : 
+	\\
 	\begin{itemize}
-		\item[•] Web Cryptography API
-		\item[•] WebSocket API
+		\item[•] WebSocket
+		\item[•] Web Cryptography
 	\end{itemize}
 	\paragraph*{}
-	Pour réaliser cela, nous devions réaliser cela avec un seul relais client pour débuter puis ensuite le faire avec 3 afin de bien vérifier l'encryptage des messages et que les messages sont bien redirigés vers le prochain relais. De plus, il fallait gérer le système de clés publiques et privées afin que le message ne puisse pas être décodé par n'importe quel utilisateur lambda.
+	Pour réaliser cela, nous devions réaliser cela avec un seul serveur relais pour débuter puis ensuite le faire avec 3 afin de bien vérifier l'encryptage des messages et que les messages sont bien redirigés vers le prochain relais. De plus, il fallait gérer le système de clés publiques et privées afin que le message ne puisse pas être décodé par n'importe quel utilisateur lambda.
 	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
 		\includegraphics[scale=0.8]{project.jpg}
 		\caption{Transfert d'un message de A vers B en passant par 3 relais}
 		\label{project}
 	\end{figure}
 	
-	\subsection{Web Cryptography API}
+	\subsection{WebSocket}
 	\paragraph*{}
-	Afin de bien crypter les messages envoyés et d'utiliser une technologies assez fiable et récente, nous avons privilégié cette API. En effet, elle est compatible sur presque tous les navigateurs (inclus de base). En revanche, il nous a fallu trouver un bon algorithme de chiffrement.\\
+	La première partie de notre PJI fut l'implémentation d'un réseau TOR à base de WebSocket entre des clients sous forme de navigateur web et un certains nombre de relais placé sur des serveurs web.
+	\\\\
+	\textit{\textbf{Qu'est-ce que les WebSocket ?}}
+	\paragraph*{}
+	WebSocket est une technologie très récente encore en cours de standardisation par le W3C et n'est disponible que sur les navigateurs les plus récent.
+	Selon la définition officielle, je cite : \\
+	\begin{quotation}
+	WebSocket est une technologie évoluée qui permet d'ouvrir un canal de communication interactif entre un navigateur (côté client) et un serveur. \\Avec cette API vous pouvez envoyer des messages à un serveur et recevoir ses réponses de manière événementielle sans avoir à aller consulter le serveur pour obtenir une réponse.
+	\end{quotation}
+	\paragraph*{}
+	Cette technologie correspond donc parfaitement à notre problématique.
+	\paragraph*{}
+	A partir de la, il  nous a fallu choisir quelle librairie de websocket utiliser car il en existe une infinité qui florisse chaque jour sur le net. Mais parmi toutes ces librairies, deux ont retenu notre attention tout particulièrement :
+	\\
+	\begin{itemize}
+		\item[•] WebSocket API 
+		\item[•] Socket.IO
+	\end{itemize}		
+	\paragraph*{}
+	\subsubsection{WebSocket API}
+	\paragraph*{}
+	WebSocket API est tout simplement la librairie officielle supportée et en cours de standardisation par le W3C.
+	Il nous était donc tout naturel de choisir cette librairie, ce que nous avons fait dans un premier temps.
+	\paragraph*{}
+	\textit{\textbf{Implémentation côté client}} 
+	\paragraph*{}
+	La première instruction est l'instanciation d'un objet WebSocket afin d'ouvrir une connexion avec le serveur.
+	\paragraph*{}
+	\begin{lstlisting}
+var websocket = new WebSocket("ws://127.0.0.1:9000");
+	\end{lstlisting}
+	\paragraph*{}
+	Remarquez le protocole utilisé qui n'est pas \emph{http} mais \emph{ws}. 
+	On ne remarque pas vraiment la différence entre ces deux protocoles côté client mais c'est côté serveur que tout va changer.
+	En effet, voila à quoi ressemble l'entête d'un paquet envoyé du protocole \emph{ws} :
+	\paragraph*{}
+	\begin{lstlisting}
+GET /chat HTTP/1.1
+Host: server.example.com
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: x3JJHMbDL1EzLkh9GBhXDw==
+Sec-WebSocket-Protocol: chat, superchat
+Sec-WebSocket-Version: 13
+Origin: http://example.com
+	\end{lstlisting}
+	\paragraph*{}
+	On appelle ce paquet en anglais un \emph{WebSocket handshake request}, ce qui se traduit en français par une requête \emph{poignée de main}, c'est à dire que le client tend la main au serveur (fais une demande de connexion) et attend un retour positif du serveur afin d'établir une connexion correcte.
+	\paragraph*{}
+	Voici le paquet attendu par le client du serveur :
+	\begin{lstlisting}
+HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: HSmrc0sMlYUkAGmm5OPpG2HaGWk=
+Sec-WebSocket-Protocol: chat
+	\end{lstlisting}	
+	\paragraph*{}
+	Une fois ce paquet du serveur réceptionné, le client est connecté de manière persistante avec le serveur.
+	\paragraph*{}
+	La suite du code est l'implémentation d'une série d'événements.
+	\paragraph*{}
+	Ouverture de connexion
+	\begin{lstlisting}
+	websocket.onopen = function(ev) { // connection is open 
+		$('#message_box').append("<div class=\"system_msg\">Connected!</div>"); //notify user
+	}
+	\end{lstlisting}	
+	\paragraph*{}
+	Fermeture de connexion
+	\begin{lstlisting}
+	websocket.onclose 	= function(ev){
+		$('#message_box').append("<div class=\"system_msg\">Connection Closed</div>");
+	}; 
+	\end{lstlisting}	
+	\paragraph*{}
+	Erreur de connexion
+	\begin{lstlisting}
+	websocket.onerror	= function(ev){ 
+		$('#message_box').append("<div class=\"system_error\">Error Occurred - "+ev.data+"</div>");
+	}; 
+	\end{lstlisting}	
+	\paragraph*{}
+	Réception d'un message du serveur
+	\begin{lstlisting}
+	websocket.onmessage = function(ev) {
+		var msg = JSON.parse(ev.data); //PHP sends Json data
+		var type = msg.type; //message type
+		var umsg = msg.message; //message text
+		var uname = msg.name; //user name
+		var ucolor = msg.color; //color
+
+		if(type == 'usermsg') 
+		{
+			$('#message_box').append("<div><span class=\"user_name\" style=\"color:#"+ucolor+"\">"+uname+"</span> : <span class=\"user_message\">"+umsg+"</span></div>");
+		}
+		if(type == 'system')
+		{
+			$('#message_box').append("<div class=\"system_msg\">"+umsg+"</div>");
+		}
+		
+		$('#message').val(''); //reset text
+		$("#message_box").scrollTop($("#message_box")[0].scrollHeight);
+	};
+	\end{lstlisting}	
+	\paragraph*{}
+	Puis dernier bout de code, l'envoi d'un message par le biais d'un simple tchat
+	\begin{lstlisting}
+	$('#send-btn').click(function(){ //use clicks message send button	
+		var mymessage = $('#message').val(); //get message text
+		var myname = $('#name').val(); //get user name
+		
+		if(myname == ""){ //empty name?
+			alert("Enter your Name please!");
+			return;
+		}
+		if(mymessage == ""){ //emtpy message?
+			alert("Enter Some message Please!");
+			return;
+		}
+		
+		//prepare json data
+		var msg = {
+			message: mymessage,
+			name: myname,
+			color : '<?php echo $colours[$user_colour]; ?>',
+			nodes : ["192.168.33.10:9002", "192.168.33.10:9001"] // node path to the client
+		};
+		//convert and send data to server
+		websocket.send(JSON.stringify(msg));
+	});
+	\end{lstlisting}	
+	\paragraph*{}
+	\textit{\textbf{Implémentation côté client}} 
+	\paragraph*{}
+	La librairie officielle des WebSocket n'est à ce jour implémentée que pour le côté client. 
+	\paragraph*{}
+	Nous avons choisi PHP pour développé le serveur mais PHP ne propose aucune librairie officielle pour communiquer correctement avec le protocole \emph{ws}. 
+	\paragraph*{}
+	Nous avons donc pris l'initiative de développer nous même une implémentation du protocole \emph{ws} en PHP.
+	\paragraph*{}
+	Nous détaillerons pas ici le code de cette implémentation car il est long et complexe et il nous permet pas de nous concentrer sur le coeur de notre PJI.
+	\paragraph*{}
+	Au final, nous avons pris la décision de passer sous NodeJS et d'utiliser la librairie \emph{Socket.IO} qui est bien plus simple à utiliser et nous permet de nous concentrer sur le coeur du projet initial.
+	\subsubsection{Socket.IO}
+	\paragraph*{}
+	Socket.IO est une librairie pour le serveur javascript NodeJS. \\
+	L'avantage de cette librairie est qu'en plus de sa simplicité déconcertante à utiliser, le code est le même que ce soit côté client ou côté serveur puisque le langage utilisé est le même (javascript). 
+	\paragraph*{}
+	\textit{\textbf{Implémentation côté client}} 
+	\paragraph*{}
+	Ouverture de connexion avec le serveur
+	\begin{lstlisting}
+var socket = io.connect('http://127.0.0.1:9000');
+	\end{lstlisting}
+	\paragraph*{}
+	Gestion des évènements 
+	\begin{lstlisting}
+	socket.on('connect', function() {
+		...
+	});
+
+	socket.on('disconnect', function() {
+		...
+	});
+
+	socket.on('error', function() {
+		...
+	});
+
+	socket.on('msg', function(msg) {
+		...
+	});
+	\end{lstlisting}	
+	\paragraph*{}
+	Envoi d'un message 
+	\begin{lstlisting}
+	$('#send-btn').click(function() { //use clicks message send button	
+		...
+	    	//prepare json data
+			var msg = {
+				message: encryptedMsg,
+				name: myname,
+				color : user_colour,
+				nodes : nodes_list // node path to the client
+			};
+
+			//send data to server
+			socket.emit('msg', msg);
+		...
+	});
+	\end{lstlisting}		 
+	\paragraph*{}
+	\textit{\textbf{Implémentation côté serveur}} 
+	\paragraph*{}
+	Création d'un serveur web 
+	\begin{lstlisting}
+var http = require('http');
+
+httpServer = http.createServer(function(req, res) {
+	res.end('Hello World');
+});
+
+httpServer.listen(port);
+	\end{lstlisting}			
+	\paragraph*{}
+	Création d'une socket serveur écoutant sur le serveur web 
+	\begin{lstlisting}
+var io = require('socket.io').listen(httpServer);
+	\end{lstlisting}	
+	\paragraph*{}
+	Réception des connexions clientes
+	\begin{lstlisting}
+io.sockets.on('connection', function(socket) {
+	console.log('new user');
+	...
+});
+	\end{lstlisting}
+	\paragraph*{}
+	Réception des messages
+	\begin{lstlisting}
+	socket.on('msg', function(msg) {
+		msg.type = 'usermsg';
+		
+		// Envoi le message a tous les clients connectes
+		io.sockets.emit('msg', msg);
+
+		// Envoi le message au relais suivant
+		if(msg.nodes.length > 0) {
+			...	
+		}
+	});
+	\end{lstlisting}		
+	
+	
+	\subsection{Web Cryptography}
+	\paragraph*{}
+	Afin de bien crypter les messages envoyés et d'utiliser une technologies assez fiable et récente, nous avons privilégié la Web Cryptography API. En effet, elle est compatible sur presque tous les navigateurs (inclus de base). En revanche, il nous a fallu trouver un bon algorithme de chiffrement.\\
 	Dans un premier temps, nous avons utilisé le chiffrement AES-CBC afin de tester et découvrir Webcrypto API et réaliser un premier jet de ce que nous voulions faire. Une fois le messages encrypté 4 fois. Voici un exemple du cryptage :
 	\newpage	
 	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
@@ -263,24 +501,19 @@ window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicE
 	\\
 	Dans cet exemple, il faut crypter obligatoirement avec la clé publique et décrypter avec la clé privée correspondante. En effet, les clés publiques sont accessibles à tout le monde alors que les clés privées sont uniquement restreintes au point relais correspondant.
 
-	
-	\subsection{WebSocket API}
-
 	\subsection{Architecture de l'application}
 
 \newpage	
 \section{Mode d'emploi}
-	\subsection{Installer un relais}
+	\subsection{Installer et configurer les relais}
 	
-	\subsection{Configurer un relais}
-	
-	\subsection{Configurer un client}
+	\subsection{Installer et configurer les clients}
 
 	\subsection{Lancer l'application}
 	
 \newpage	
 \section{Tests}
-	\subsection{Docker}
+	\subsection{WebSocket}
 	
 	\subsection{Cryptographie}
 	\paragraph*{}
@@ -423,7 +656,6 @@ function decryptData(key, data, jquerySelector){
 	\end{lstlisting}
 	L'utilisation de \textit{console.log()} nous a été très utile afin de debugger notre code mais aussi servir de trace pour voir l'utilisation de ce dernier. Une fois ceci fait, l'enchaînement des cryptages et décryptages se fait séquentiellement.\\
 	Un exemple est disponible dans la partie ./Webcrypto part/ en affichant la page index.html.
-	\subsection{WebSocket}
 
 \newpage	
 \begin{center}

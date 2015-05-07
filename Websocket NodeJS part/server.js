@@ -44,8 +44,25 @@ io.sockets.on('connection', function(socket) {
 	});
 });
 
+var crypto = require('crypto');
+/*var alice = crypto.createECDH('secp256k1');
+
+var crypto = require('crypto');*/
+
+var prime_length = 60;
+var diffHell = crypto.createDiffieHellman(prime_length);
+
+diffHell.generateKeys('base64');
+console.log("Public Key : " ,diffHell.getPublicKey('base64'));
+console.log("Private Key : " ,diffHell.getPrivateKey('base64'));
+
+console.log("Public Key : " ,diffHell.getPublicKey('hex'));
+console.log("Private Key : " ,diffHell.getPrivateKey('hex'));
+
+crypto.publicEncrypt(diffHell.getPublicKey('base64'), "Salut");
+
 // Crypto
-var crypto = require('./lib/webcrypt/subtlecrypto');
+/*var crypto = require('./lib/webcrypt/subtlecrypto');
 var keyGenerate1;
 var encryptedMsg;
 var compteur = 0;
@@ -77,7 +94,7 @@ function encryptData(key, data) {
 		/*console.log("RSA-OAEP encrypt "+compteur+" :");
 		temp = new Uint8Array(ct1);
 		encryptedMsg = new Uint8Array(ct1);
-		console.log(uint8ArrayToAscii(temp));*/
+		console.log(uint8ArrayToAscii(temp));
 	}, handle_error);
 	return temp;
 }
@@ -87,4 +104,4 @@ crypto.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 512, publicEx
 	console.log(keyGenerate1);
 
 	encryptData(keyGenerate1, asciiToUint8Array('Salut'));
-}, handle_error);
+}, handle_error);*/

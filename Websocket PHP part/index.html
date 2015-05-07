@@ -46,6 +46,12 @@ $(document).ready(function(){
 	websocket.onopen = function(ev) { // connection is open 
 		$('#message_box').append("<div class=\"system_msg\">Connected!</div>"); //notify user
 	}
+	websocket.onerror	= function(ev){ 
+		$('#message_box').append("<div class=\"system_error\">Error Occurred - "+ev.data+"</div>");
+	}; 
+	websocket.onclose 	= function(ev){
+		$('#message_box').append("<div class=\"system_msg\">Connection Closed</div>");
+	}; 
 
 	$('#send-btn').click(function(){ //use clicks message send button	
 		var mymessage = $('#message').val(); //get message text
@@ -91,9 +97,6 @@ $(document).ready(function(){
 		$('#message').val(''); //reset text
 		$("#message_box").scrollTop($("#message_box")[0].scrollHeight);
 	};
-	
-	websocket.onerror	= function(ev){$('#message_box').append("<div class=\"system_error\">Error Occurred - "+ev.data+"</div>");}; 
-	websocket.onclose 	= function(ev){$('#message_box').append("<div class=\"system_msg\">Connection Closed</div>");}; 
 });
 </script>
 <div class="chat_wrapper">

@@ -1,1 +1,6 @@
 /Websocket\ NodeJS\ part/node_modules/
+*.aux
+*.log
+*.out
+*.gz
+*.toc
