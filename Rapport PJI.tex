@@ -506,8 +506,58 @@ window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicE
 \newpage	
 \section{Mode d'emploi}
 	\subsection{Installer et configurer les relais}
+	\paragraph*{}
+	Dans un premier temps, nous supposons que NodeJS est installé et fonctionnel en ligne de commande.
+	\paragraph*{}
+	La première chose à faire est d'installer toutes les dépendances au bon fonctionnement du relais, c'est à dire tous les modules NodeJS dont le programme à besoin pour fonctionner.
+	\paragraph*{}
+	Grâce à un fichier \emph{package.json} qui décrit toutes les dépendances à installer, il suffit de taper la commande : (dans le même dossier au se trouve le fichier \emph{package.json})
+	
+	\begin{lstlisting}
+npm install
+	\end{lstlisting}
+	
+	\paragraph*{}
+	Un dossier \emph{node\_modules} sera créé contenant les dépendances.
+	
+	\paragraph*{}
+	Nous pouvons maintenant démarrer autant de relais que nous le souhaitons via la commande :
+	
+	\begin{lstlisting}
+node server.js [<num_port>]
+	\end{lstlisting}	
+	
+	\paragraph*{}
+	Évidemment, nous mettons un numéro de port différent pour chaque relais.
 	
 	\subsection{Installer et configurer les clients}
+	\paragraph*{}
+	Les clients sont sous forme de simple fichiers html. (ex: client1.html)
+	
+	\paragraph*{}
+	Cependant, nous devons quand même regarder le code pour les configurer. \\
+	En effet, il faut définir l'adresse des relais à parcourir pour envoyer un message.
+	
+	\paragraph*{}
+	Ouvrons le fichier \emph{client1.html} et regardons le code.
+	
+	\paragraph*{}
+	\begin{lstlisting}
+var node_addr = 'http://127.0.0.1:9000';
+	\end{lstlisting}	
+	
+	\paragraph*{}
+	Cette ligne décrit le relais qui aura une connexion permanente avec le client. \\
+	C'est également le relais qui recevra en premier tous les messages du client.
+	
+	\paragraph*{}
+	\begin{lstlisting}
+var nodes_list = ["127.0.0.1:9001", "127.0.0.1:9002"];
+	\end{lstlisting}	
+	
+	\paragraph*{}
+	Cette ligne décrit la liste des relais suivant à parcourir. \\
+	Les clients qui recevront les messages doivent être connectés au dernier relais de la liste.	
 
 	\subsection{Lancer l'application}
 	
