@@ -122,11 +122,11 @@
 \section*{Introduction}
 \end{center}
 \paragraph{}
-Tor est un projet pour le support de l'anonymat en dissimulant les communications entre un client web et un serveur. Le mécanisme s'appuie sur un ensemble de relais de confiance disposés sur des serveurs. 
+TOR est un projet pour le support de l'anonymat en dissimulant les communications entre un client web et un serveur. Le mécanisme s'appuie sur un ensemble de relais de confiance disposés sur des serveurs. 
 \paragraph{} 
-Le nombre limité de relais (moins de 5000) et la confiance dans leur non-compromission peut être considéré comme une limitation de l'approche de Tor. Un moyen d'outrepasser cette limitation serait de limiter le rôle du serveur a un simple relais et de laisser les clients gérer l'anonymat dans le système. 
+Le nombre limité de relais (moins de 5000) et la confiance dans leur non-compromission peut être considéré comme une limitation de l'approche de TOR. Un moyen d'outrepasser cette limitation serait de limiter le rôle du serveur à un simple relais et de laisser les clients gérer l'anonymat dans le système. 
 \paragraph{}
-Afin de rendre le système le plus pratique et adoptable pour multiplier les chemins possibles, une idée serait de ne s'appuyer que sur des technologies webs (http, javascript) pour que chaque navigateur puisse devenir un client.
+Afin de rendre le système le plus pratique et adoptable pour multiplier les chemins possibles, une idée serait de ne s'appuyer que sur des technologies web (http, JavaScript) pour que chaque navigateur puisse devenir un client.
 \paragraph{}
 Le but de ce projet est d'étudier la faisabilité de l'approche à l'aide de technologie comme websocket. Le cas d'étude sera limité à un simple chat (saisie limitée à 140 caractères).
 
@@ -161,7 +161,7 @@ Le but de ce projet est d'étudier la faisabilité de l'approche à l'aide de te
 	\\\\
 	\textit{\textbf{Qu'est-ce que les WebSocket ?}}
 	\paragraph*{}
-	WebSocket est une technologie très récente encore en cours de standardisation par le W3C et n'est disponible que sur les navigateurs les plus récent.
+	WebSocket est une technologie très récente encore en cours de standardisation par le W3C et n'est disponible que sur les navigateurs les plus récents.
 	Selon la définition officielle, je cite : \\
 	\begin{quotation}
 	WebSocket est une technologie évoluée qui permet d'ouvrir un canal de communication interactif entre un navigateur (côté client) et un serveur. \\Avec cette API vous pouvez envoyer des messages à un serveur et recevoir ses réponses de manière événementielle sans avoir à aller consulter le serveur pour obtenir une réponse.
@@ -169,7 +169,7 @@ Le but de ce projet est d'étudier la faisabilité de l'approche à l'aide de te
 	\paragraph*{}
 	Cette technologie correspond donc parfaitement à notre problématique.
 	\paragraph*{}
-	A partir de la, il  nous a fallu choisir quelle librairie de websocket utiliser car il en existe une infinité qui florisse chaque jour sur le net. Mais parmi toutes ces librairies, deux ont retenu notre attention tout particulièrement :
+	A partir de la, il  nous a fallu choisir quelle librairie de websocket utiliser car il en existe une infinité qui fleurisse chaque jour sur le net. Mais parmi toutes ces librairies, deux ont retenu notre attention tout particulièrement :
 	\\
 	\begin{itemize}
 		\item[•] WebSocket API 
@@ -298,13 +298,13 @@ Sec-WebSocket-Protocol: chat
 	\paragraph*{}
 	Nous avons donc pris l'initiative de développer nous même une implémentation du protocole \emph{ws} en PHP.
 	\paragraph*{}
-	Nous détaillerons pas ici le code de cette implémentation car il est long et complexe et il nous permet pas de nous concentrer sur le coeur de notre PJI.
+	Nous détaillerons pas ici le code de cette implémentation car il est long et complexe et il nous permet pas de nous concentrer sur le cœur de notre PJI.
 	\paragraph*{}
-	Au final, nous avons pris la décision de passer sous NodeJS et d'utiliser la librairie \emph{Socket.IO} qui est bien plus simple à utiliser et nous permet de nous concentrer sur le coeur du projet initial.
+	Au final, nous avons pris la décision de passer sous NodeJS et d'utiliser la librairie \emph{Socket.IO} qui est bien plus simple à utiliser et nous permet de nous concentrer sur le cœur du projet initial.
 	\subsubsection{Socket.IO}
 	\paragraph*{}
-	Socket.IO est une librairie pour le serveur javascript NodeJS. \\
-	L'avantage de cette librairie est qu'en plus de sa simplicité déconcertante à utiliser, le code est le même que ce soit côté client ou côté serveur puisque le langage utilisé est le même (javascript). 
+	Socket.IO est une librairie pour le serveur JavaScript NodeJS. \\
+	L'avantage de cette librairie est qu'en plus de sa simplicité déconcertante à utiliser, le code est le même que ce soit côté client ou côté serveur puisque le langage utilisé est le même (JavaScript). 
 	\paragraph*{}
 	\textit{\textbf{Implémentation côté client}} 
 	\paragraph*{}
@@ -313,7 +313,7 @@ Sec-WebSocket-Protocol: chat
 var socket = io.connect('http://127.0.0.1:9000');
 	\end{lstlisting}
 	\paragraph*{}
-	Gestion des évènements 
+	Gestion des événements 
 	\begin{lstlisting}
 	socket.on('connect', function() {
 		...
@@ -403,9 +403,9 @@ io.sockets.on('connection', function(socket) {
 		\label{AES}
 	\end{figure}
 	\paragraph*{}
-	Pour la solution optimale, il est plus préférable d'utiliser un système de clés publiques et de clés privées. Avec l'algorithme RSA-OAEP, celà est possible. Chaque clé générée (l'objet KeyPromise) contient une clé publique et une clé privée. De ce fait, cette solution est plus attendu car elle ressemble très fortement à l'architecture du réseau TOR. Bien entendu, le client doit connaître le chemin afin qu'il puisse créer son message crypté avec les clés publiques des relais correspondants.
+	Pour la solution optimale, il est plus préférable d'utiliser un système de clés publiques et de clés privées. Avec l'algorithme RSA-OAEP, cela est possible. Chaque clé générée (l'objet KeyPromise) contient une clé publique et une clé privée. De ce fait, cette solution est plus attendu car elle ressemble très fortement à l'architecture du réseau TOR. Bien entendu, le client doit connaître le chemin afin qu'il puisse créer son message crypté avec les clés publiques des relais correspondants.
 	\paragraph*{}
-	Ce qu'il faut comprendre en utilisant WebCrypto API, c'est le fait que pour générer une clé, encrypter ou décrypter, nous jouons avec des \textit{Promises}. En Javascript, des \textit{Promises} ou "promesses" en français, sont utilisées pour réaliser des actions asynchrones. En effet, elles représentent des intermédiaires vers des valeurs qui ne sont nécessairement connues lors de leurs créations. Cela permet de gérer des actions asynchrones et de leur associer des gestionnaires d'erreurs. 
+	Ce qu'il faut comprendre en utilisant WebCrypto API, c'est le fait que pour générer une clé, encrypter ou décrypter, nous jouons avec des \textit{Promises}. En JavaScript, des \textit{Promises} ou "promesses" en français, sont utilisées pour réaliser des actions asynchrones. En effet, elles représentent des intermédiaires vers des valeurs qui ne sont nécessairement connues lors de leurs créations. Cela permet de gérer des actions asynchrones et de leur associer des gestionnaires d'erreurs. 
 	\paragraph*{}
 	La principale difficulté qui réside dans le fait d'utiliser des \textit{Promises} est de bien gérer les erreurs mais savoir exactement où le code à échouer. Le fait d'encrypter un message avec une clé publique puis d'encrypter le résultat avec une autre clé publique nécessite obligatoirement une imbrication du code.
 	Voici un exemple :
@@ -432,7 +432,7 @@ window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt
 	\end{lstlisting}
 	\paragraph*{}
 	Une autre difficulté réside dans le fait de trouver un bon algorithme qui respecte ce que l'on souhaite faire. Par exemple, pour découvrir WebCrypto API, nous avions testé avec la cryptographie AES-CBC comme dans l'exemple précédent.
-	Dans ce cas, on constate que l'on a bien une clé qui est générée. En revanche, elle ne respecte par ce que l'architecture TOR exige. La clé n'est pas publique ni privée mais permet juste d'encrypter un message et de le décrypter. Nous avons regardé les différents cryptages disponibles et compatibles et nous avons trouvé RSA-OAEP. Ce dernier gère les clés publiques et privées et permet d'encrypter et de décrypter. D'autres cryptographies RSA possèdent juste les fonctions de signature et de vérification de la signature. Egalement, la cryptographie RSAES-PKCS1-v1\_5	 aurait pu être exploitée mais cette dernière n'est plus disponible dans les navigateurs. C'est donc pour cela que nous avons choisi RSA-OAEP.\\
+	Dans ce cas, on constate que l'on a bien une clé qui est générée. En revanche, elle ne respecte par ce que l'architecture TOR exige. La clé n'est pas publique ni privée mais permet juste d'encrypter un message et de le décrypter. Nous avons regardé les différents cryptages disponibles et compatibles et nous avons trouvé RSA-OAEP. Ce dernier gère les clés publiques et privées et permet d'encrypter et de décrypter. D'autres cryptographies RSA possèdent juste les fonctions de signature et de vérification de la signature. Également, la cryptographie RSAES-PKCS1-v1\_5	 aurait pu être exploitée mais cette dernière n'est plus disponible dans les navigateurs. C'est donc pour cela que nous avons choisi RSA-OAEP.\\
 	Voici un exemple basique avec RSA-OAEP :
 	\begin{lstlisting}
 window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicExponent: new Uint8Array([0x01, 0x00, 0x01]), hash: {name: "SHA-256"}}, true, ["encrypt", "decrypt"]).then(function (key) {
@@ -454,7 +454,7 @@ window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicE
 }, handle_error);
 	\end{lstlisting}
 	\paragraph*{}
-	Egalement, nous avons pu regarder quels sont les algorithmes supportés par la plupart des navigateurs. Nous en avons donc dressé le tableau suivant : 
+	Également, nous avons pu regarder quels sont les algorithmes supportés par la plupart des navigateurs. Nous en avons donc dressé le tableau suivant : 
 	\begin{center}
 	\begin{tabular}[h]{|*{2}{c|}}
   		\hline
@@ -502,6 +502,49 @@ window.crypto.subtle.generateKey({name: "RSA-OAEP", modulusLength: 2048, publicE
 	Dans cet exemple, il faut crypter obligatoirement avec la clé publique et décrypter avec la clé privée correspondante. En effet, les clés publiques sont accessibles à tout le monde alors que les clés privées sont uniquement restreintes au point relais correspondant.
 
 	\subsection{Architecture de l'application}
+	\paragraph*{}
+	L'application se compose en 3 parties :\\
+	\begin{itemize}
+		\item[•]WebCrypto
+		\item[•]Websocket en PHP
+		\item[•]Websocket en NodeJS
+	\end{itemize}
+	Dans chacune des parties, un README est fourni précisant comment tester la partie concernée.
+	\paragraph*{}
+	La partie Webcrypto comprends une page html ainsi que plusieurs fichiers JavaScript dans le dossier js/. Dans ce dernier dossier, on y retrouve les tests de base en AES-CBC puis en RSA-OAEP.\\
+	Voici les fichiers dans le dossier Webcrypto part : \\
+	\begin{itemize}
+		\item[•]index.html
+		\item[•]js/
+		\begin{itemize}
+			\item[•]jquery-1.11.2.min.js
+			\item[•]short-cbc.js
+			\item[•]short-rsa.js
+			\item[•]test-cbc.js
+			\item[•]test-rsa.js
+		\end{itemize}
+	\end{itemize}
+	Par défaut, la page index.html utilise le fichier test-rsa.js.
+	\paragraph*{}
+	Pour la partie utilisant NodeJS, nous avons plusieurs dossiers et fichiers
+	Voici la composition :\\
+	\begin{itemize}
+		\item[•]lib/ \hspace{72px} dossier contenant les librairies
+		\item[•]js/ \hspace{80px} dossier contenant le code JavaScript pour le client et Socket.io
+		\item[•]node\_modules/ \hspace{10px} dossier contenant les modules pour NodeJS
+		\item[•]css/
+		\item[•]client1.html
+		\item[•]client2.html
+		\item[•]server.js
+		\item[•]package.json
+	\end{itemize}
+	\paragraph*{}
+	Pour la partie PHP, il y a juste 2 fichiers : \\
+	\begin{itemize}
+		\item[•]index.html
+		\item[•]server.php
+	\end{itemize}
+	Comme leurs noms l'indique, la page index.html correspond au client et server.php au server.
 
 \newpage	
 \section{Mode d'emploi}
@@ -567,7 +610,7 @@ var nodes_list = ["127.0.0.1:9001", "127.0.0.1:9002"];
 	
 	\subsection{Cryptographie}
 	\paragraph*{}
-	Pour la cryptographie avec WebCrypto API, il fallait tester des cas de base. Tout d'abord pour découvrir le fonctionnement, nous avons pris l'algorithme AES-CBC. Puis nous avons généré une clé et encrypté un message de test. Une fois ce message encrypté, nous avons affiché le résultat sous la forme d'une cha\^ine de caractères. Ensuite, pour vérifier que l'on puisse bien décrypter cela, nous l'avons décrypter avec la clé et vérifié que le message décrypté correspondait bien à celui de départ.\\
+	Pour la cryptographie avec WebCrypto API, il fallait tester des cas de base. Tout d'abord pour découvrir le fonctionnement, nous avons pris l'algorithme AES-CBC. Puis nous avons généré une clé et encrypté un message de test. Une fois ce message encrypté, nous avons affiché le résultat sous la forme d'une chaîne de caractères. Ensuite, pour vérifier que l'on puisse bien décrypter cela, nous l'avons décrypter avec la clé et vérifié que le message décrypté correspondait bien à celui de départ.\\
 	Voici le code qui a permis de réaliser cela :
 	\begin{lstlisting}
 window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]).then(function (key) {
@@ -591,7 +634,7 @@ window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt
 }, handle_error);
 	\end{lstlisting}
 	Une fois ceci réalisé, nous nous sommes posés la question de ce qu'il en est si nous cryptons 4 fois de suite un message. Pour cela, il nous a fallu adapter notre code de manière basique et de tester ce que cela donnait.\\
-	Voici l'encha\^inement du code : 
+	Voici l'enchaînement du code : 
 	\begin{lstlisting}
 function startCrypto(input_content){
   window.crypto.subtle.generateKey({name: "aes-cbc", length: 128}, true, ["encrypt", "decrypt"]).then(function (key1) {
@@ -708,7 +751,12 @@ function decryptData(key, data, jquerySelector){
 	Un exemple est disponible dans la partie ./Webcrypto part/ en affichant la page index.html.
 
 \newpage	
-\begin{center}
 \section*{Conclusion}
-\end{center}
+\paragraph*{}
+Ce projet est très formateur autant dans l'aspect que dans la complexité des technologies. Nous avons passé beaucoup de temps sur NodeJS mais aussi sur Webcrypto API afin de bien comprendre et bien vérifier nos tests afin que tout soit correct. Avec ce projet, nous avons reçu beaucoup de connaissance sur la cryptographie mais aussi sur l'utilisation et la configuration de NodeJS.
+\paragraph*{}
+Cependant, étant des technologies encore très récentes et en cours de développement, nous avons pu commencer à utiliser ces technologies qui seront développées et utilisées de plus en plus  dans un futur proche. Or, tout n'est pas spécialement développé sur ces technologies.
+\paragraph*{}
+Pour terminer complètement ce projet l'idéal serait développer un module ou une librairie afin de faire communication entre Webcrypto API et la cryptographie inclue dans NodeJS. Cela consiste en la suite logique et complète du projet. 
+
 \end{document}
