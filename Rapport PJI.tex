@@ -603,10 +603,180 @@ var nodes_list = ["127.0.0.1:9001", "127.0.0.1:9002"];
 	Les clients qui recevront les messages doivent être connectés au dernier relais de la liste.	
 
 	\subsection{Lancer l'application}
+	\paragraph*{}
+	Prenons pour exemple cette figure :
+	
+	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
+		\includegraphics[scale=0.8]{project.jpg}
+		\caption{Transfert d'un message de A vers B en passant par 3 relais}
+		\label{project}
+	\end{figure}
+	
+	\paragraph*{}
+	Nous sommes un client A et nous voulons envoyer un message au client B en passant par 3 relais d'adresse :
+	
+	\paragraph*{}
+	\begin{itemize}
+		\item[•]Relais 3 : 127.0.0.1:9000
+		\item[•]Relais 2 : 127.0.0.1:9001
+		\item[•]Relais 1 : 127.0.0.1:9002
+	\end{itemize}
+	
+	\paragraph*{}
+	En revanche le client B n'envoie pas de message au client A.
+	
+	\paragraph*{}
+	Tout d'abord nous configurons les relais ainsi que les clients comme décrit ci-dessus. \\
+	Les relais se lancent avec les commandes :
+	
+	\paragraph*{}
+	\begin{lstlisting}
+node server.js 9000
+node server.js 9001
+node server.js 9002
+	\end{lstlisting}
+	
+	\paragraph*{}
+	Le client A se configure ainsi :
+	
+	\paragraph*{}
+	\begin{lstlisting}
+	var node_addr = 'http://127.0.0.1:9000';
+	var nodes_list = ["127.0.0.1:9001", "127.0.0.1:9002"];
+	\end{lstlisting}	
+	
+	\paragraph*{}
+	Le client B se configure ainsi :
+	
+	\paragraph*{}
+	\begin{lstlisting}
+	var node_addr = 'http://127.0.0.1:9002';
+	var nodes_list = [];
+	\end{lstlisting}
+	
+	\paragraph*{}
+	Maintenant, nous ouvrons le tchat et arrivons sur cette page :
+	
+	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
+		\includegraphics[scale=0.8]{chat_connected.png}
+		\caption{Le client A est bien connecté au relais 3}
+		\label{project}
+	\end{figure}	
+	
+	\paragraph*{}
+	Un message système nous informe que la connexion s'est effectué correctement au premier relais. \\
+	Nous pouvons alors envoyer des messages au client B.
+	
+	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
+		\includegraphics[scale=0.8]{chat_message.png}
+		\caption{Le relais nous renvoie le message envoyé}
+		\label{project}
+	\end{figure}	
+	
 	
 \newpage	
 \section{Tests}
 	\subsection{WebSocket}
+	\paragraph*{}
+	Ici, nous nous intéresserons à la partie NodeJS seulement car c'est la partie finale qui a été choisi pour ce PJI.	
+	
+	\paragraph*{}
+	Le premier test à effectuer avec NodeJS est si le serveur est bien démarré ou non. 
+	
+	\begin{figure}[h] %%%%% h = here, t = top, b = bottom
+		\includegraphics[scale=0.8]{started_server.png}
+		\caption{Le serveur est démarré correctement}
+		\label{project}
+	\end{figure}
+	
+	\paragraph*{}
+	Sur cette figure, nous pouvons visualiser un \emph{Hello World} lorsque nous tapons l'adresse du relais dans le navigateur. Le serveur est donc bien démarré.
+	
+	\paragraph*{}
+	Le code se rapportant au démarrage du serveur est le suivant :
+	
+	\paragraph*{}
+	\begin{lstlisting}
+httpServer = http.createServer(function(req, res) {
+	res.end('Hello World');
+});
+
+httpServer.listen(port);
+	\end{lstlisting}	
+	
+	\paragraph*{}
+	Nous voulons tester que le relais reçoit bien la connexion d'un client \\
+	Pour cela, il faut d'abord créer une instance d'une socket serveur comme ceci :
+	
+	\paragraph*{}
+	\begin{lstlisting}
+var io = require('socket.io').listen(httpServer);
+	\end{lstlisting}
+	
+	\paragraph*{}
+	Cette ligne importe un nouveau module NodeJS, il faut donc que ce module soit bien installé au projet. \\
+	Si aucune erreur apparaît lors du démarrage du relais alors le module est installé correctement.
+	
+	\paragraph*{}
+	Voici le code qui écoute la connexion des socket clientes :
+
+	\paragraph*{}
+	\begin{lstlisting}
+io.sockets.on('connection', function(socket) {
+	console.log('new user');
+	
+	...
+});
+	\end{lstlisting}
+	
+	\paragraph*{}
+	A chaque connexion d'un client au relais, la console affiche donc \emph{new user}.
+	
+	\paragraph*{}
+	Nous voulons tester que le relais reçoit bien un message client et le renvoi correctement à tous les clients connectés. 
+	
+	\paragraph*{}
+	\begin{lstlisting}
+	socket.on('msg', function(msg) {
+		...
+		io.sockets.emit('msg', msg);
+
+		...
+	});
+	\end{lstlisting}	
+	
+	\paragraph*{}
+	Si le code fonctionne, tous les clients connectés reçoivent le message.
+		
+	\paragraph*{}
+	Le dernier test est de vérifier que le relais traite bien le message qu'il a reçu et renvoi le message au relais suivant le chemin donné dans le message.
+	
+	\paragraph*{}
+	\begin{lstlisting}
+		if(msg.nodes.length > 0) {
+			var next_node = 'http://' + msg.nodes[0];
+			msg.nodes = msg.nodes.slice(1);
+
+			if(!io_client_connected) {
+				io_client = require("socket.io-client")(next_node);
+			} else {
+				io_client.emit('msg', msg);			
+			}
+
+			io_client.on('connect', function() {
+				io_client_connected = true;
+				io_client.emit('msg', msg);
+			});
+
+			io_client.on('disconnect', function() {
+				io_client_connected = false;
+			});	
+		}
+	\end{lstlisting}
+	
+	\paragraph*{}
+	Ici, il faut avoir installé le module \emph{socket.io-client} car pour se connecter au prochain relais de la liste, le relais devient client.
+		 
 	
 	\subsection{Cryptographie}
 	\paragraph*{}
