@@ -8,33 +8,6 @@
 	
 	Technologies étudiées: websocket api, web crypto api, PHP.
 
-## Code
-*coming soon*
-
-## Test project
-### Websocket NodeJS part
-1. Download and install nodejs 
-
-2. Go to the Websocket NodeJS part folder
-
-3. Type : npm install (to install dependencies)
-
-4. Type : node server.js [<port_number>] (to launch server)
-
-5. open index.html in your favourite browser and enjoy !
-
-### Websocket PHP part
-Running Server :
-
-1. Change host address in index.html and server.php
-
-2. Go to your shell command-line interface
-
-3. type: 
-	php -q /path/to/server.php
-
-4. Using browser, navigate to index.html location to open chat page
-
 ## Contributors
 * Damien Cornette
 * Kevin franquenouille
